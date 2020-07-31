@@ -4,9 +4,11 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 )
 
 func main() {
+	cls()
 	if len(os.Args) == 1 {
 		log.Fatal("Please import a port!")
 	}
@@ -25,6 +27,12 @@ func main() {
 
 func handleConn(c *net.UDPConn) {
 	for {
-		
 	}
+}
+
+// Clear Screen
+func cls() {
+	cmd := exec.Command("cmd", "/c", "cls")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 }
