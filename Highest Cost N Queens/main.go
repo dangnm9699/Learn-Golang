@@ -5,6 +5,7 @@ import (
 )
 
 var solutions int = 0
+var max int = 0
 var board [][]int
 var size int
 var checkCol []bool
@@ -18,8 +19,17 @@ func main() {
 		board[i] = make([]int, size+1)
 		for j := 1; j <= size; j++ {
 			fmt.Scanf("%d", &board[i][j])
+			if board[i][j] > max {
+				max = board[i][j]
+			}
 		}
 		fmt.Scanf("\n")
+	}
+	for i := 1; i <= size; i++ {
+		for j := 1; j <= size; j++ {
+			fmt.Printf("%-3d", board[i][j])
+		}
+		fmt.Print("\n")
 	}
 	checkCol = make([]bool, size+1)
 	checkBackSlash = make([]bool, 2*size)
@@ -38,7 +48,8 @@ func try(row, val int) {
 	for col := 1; col <= size; col++ {
 		if !checkCol[col] &&
 			!checkSlash[row-col+size] &&
-			!checkBackSlash[row+col-1] {
+			!checkBackSlash[row+col-1] &&
+			val+board[row][col]+(size-row)*max > solutions {
 			// assign to be used
 			checkCol[col] = true
 			checkSlash[row-col+size] = true
