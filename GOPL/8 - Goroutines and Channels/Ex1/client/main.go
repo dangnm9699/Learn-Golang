@@ -38,12 +38,12 @@ func main() {
 	// Print table
 	for {
 		cls()
-		fmt.Printf("+%s+%s+%s+\n", strings.Repeat("-", 20), strings.Repeat("-", 20), strings.Repeat("-", 20))
-		fmt.Printf("|%-20s|%-20s|%-20s|\n", "Location", "Address", "Time")
-		fmt.Printf("+%s+%s+%s+\n", strings.Repeat("-", 20), strings.Repeat("-", 20), strings.Repeat("-", 20))
+		fmt.Printf("+%s+%s+%s+%s+\n", strings.Repeat("-", 20), strings.Repeat("-", 21), strings.Repeat("-", 10), strings.Repeat("-", 20))
+		fmt.Printf("|      %-s      |       %-s       |   %-s   |      %-s      |\n", "Location", "Address", "Time", "Timezone")
+		fmt.Printf("+%s+%s+%s+%s+\n", strings.Repeat("-", 20), strings.Repeat("-", 21), strings.Repeat("-", 10), strings.Repeat("-", 20))
 		for _, s := range servers {
-			fmt.Printf("|%-20s|%-20s|%-20s|\n", s.location, s.address, s.time)
-			fmt.Printf("+%s+%s+%s+\n", strings.Repeat("-", 20), strings.Repeat("-", 20), strings.Repeat("-", 20))
+			fmt.Printf("| %-19s| %-20s| %-s | %-19s|\n", s.location, s.address, s.time, s.timezone)
+			fmt.Printf("+%s+%s+%s+%s+\n", strings.Repeat("-", 20), strings.Repeat("-", 21), strings.Repeat("-", 10), strings.Repeat("-", 20))
 		}
 		time.Sleep(1 * time.Second)
 	}
