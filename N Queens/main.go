@@ -10,9 +10,6 @@ var checkCol []bool
 var checkBackSlash []bool
 var checkSlash []bool
 
-/*
- * Description: main function
- */
 func main() {
 	fmt.Scanf("%d\n", &size)
 	checkCol = make([]bool, size+1)
@@ -31,13 +28,10 @@ func try(row int) {
 		if !checkCol[col] &&
 			!checkSlash[row-col+size] &&
 			!checkBackSlash[row+col-1] {
-			// assign to be used
 			checkCol[col] = true
 			checkSlash[row-col+size] = true
 			checkBackSlash[row+col-1] = true
-			// try next row
 			try(row + 1)
-			// backtrack
 			checkCol[col] = false
 			checkSlash[row-col+size] = false
 			checkBackSlash[row+col-1] = false
