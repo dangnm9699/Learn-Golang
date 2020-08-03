@@ -16,12 +16,14 @@ func main() {
 	}
 	defer conn.Close()
 	fmt.Println("Connected")
-	fmt.Fprint(conn, "Connected\n")
+	conn.Write([]byte("Connected\n"))
+	// fmt.Fprint(conn, "Connected\n")
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("send   : ")
 		input, _ := reader.ReadString('\n')
-		fmt.Fprintf(conn, input+"\n")
+		conn.Write([]byte(input + "\n"))
+		// fmt.Fprintf(conn, input+"\n")
 		res, _ := bufio.NewReader(conn).ReadString('\n')
 		fmt.Print("receive: " + res)
 		a := strings.Split(strings.TrimSpace(input), " ")[0]

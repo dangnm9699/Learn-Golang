@@ -36,6 +36,7 @@ func handleConn(c net.Conn) {
 			return
 		}
 		fmt.Printf("%s -> %s", c.RemoteAddr().String(), req)
-		fmt.Fprint(c, "OK\n")
+		// fmt.Fprint(c, "OK\n")
+		c.Write([]byte("OK\n"))
 	}
 }
