@@ -1,0 +1,1 @@
+go run main.go 12kg 250F 12lb
