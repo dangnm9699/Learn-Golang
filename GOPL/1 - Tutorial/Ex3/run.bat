@@ -1,1 +1,1 @@
-go test -bench .
+go run main.go
