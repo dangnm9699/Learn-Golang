@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
-	"os/exec"
 	"strings"
 	"time"
 )
 
 func main() {
-	cls()
 	listener, err := net.Listen("tcp", ":8000")
 	if err != nil {
 		log.Fatal(err)
@@ -26,13 +23,6 @@ func main() {
 		}
 		go handleConn(conn)
 	}
-}
-
-// Clear Screen
-func cls() {
-	cmd := exec.Command("cmd", "/c", "cls")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
 }
 
 func echo(c net.Conn, shout string, delay time.Duration) {
