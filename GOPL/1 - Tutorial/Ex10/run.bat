@@ -1,0 +1,1 @@
+go run main.go https://godoc.org https://golang.org http://gopl.io
