@@ -1,0 +1,1 @@
+go run main.go 2006 funny > result.txt
