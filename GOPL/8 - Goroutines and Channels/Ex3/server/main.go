@@ -5,21 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
-	"os/exec"
 	"strings"
 	"time"
 )
 
 func main() {
-	cls()
-	if len(os.Args) == 1 {
-		fmt.Println("Please provide port number")
-		return
-	}
-
-	port := ":" + os.Args[1]
-	listener, err := net.Listen("tcp", port)
+	listener, err := net.Listen("tcp", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,13 +23,6 @@ func main() {
 		}
 		go handleConn(conn)
 	}
-}
-
-// Clear Screen
-func cls() {
-	cmd := exec.Command("cmd", "/c", "cls")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
 }
 
 func echo(c net.Conn, shout string, delay time.Duration) {
