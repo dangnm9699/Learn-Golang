@@ -1,0 +1,12 @@
+syntax = "proto3";
+package main;
+
+message Packet {
+    int32 cmd = 1;
+    User info = 2;
+}
+
+message User {
+    string id = 1;
+    int32 score = 2;
+}
