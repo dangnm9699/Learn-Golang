@@ -31,7 +31,7 @@ func main() {
 }
 func sendData(c *net.UDPConn) {
 	send := Packet{
-		Cmd: rand.Int31n(2) + 1,
+		Cmd: rand.Int31n(3) + 1,
 		Info: &User{
 			Id:    os.Args[1],
 			Score: rand.Int31n(10),

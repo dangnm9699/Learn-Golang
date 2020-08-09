@@ -1,12 +1,21 @@
 syntax = "proto3";
 package main;
 
-message Packet {
+message Request {
     int32 cmd = 1;
-    User info = 2;
+    User data = 2;
 }
 
 message User {
-    string id = 1;
-    int32 score = 2;
+    string MSISDN = 1;
+    string IMSI = 2;
+    string name = 3;
+    string ID = 4;
+    string DOB = 5;
+}
+
+message Response {
+    int32 cmd = 1;
+    int32 rescode = 2;
+    string reason = 3;
 }
