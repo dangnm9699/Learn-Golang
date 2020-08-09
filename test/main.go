@@ -1,25 +1,29 @@
 package main
 
 import (
-	"log"
-	"os"
+	"database/sql"
+	"fmt"
+	"strconv"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
-const path = "./database.json"
-
-func main() {
-	createFile()
+type user struct {
+	id          int32
+	description string
 }
 
-func createFile() {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		file, err := os.Create(path)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		defer file.Close()
+func main() {
+	database, _ := sql.Open("sqlite3", "./database.db")
+	statement, _ := database.Prepare("CREATE TABLE IF NOT EXISTS user (id INTEGER, description TEXT)")
+	statement.Exec()
+	statement, _ = database.Prepare("INSERT INTO user (id, description) VALUES (?, ?)")
+	statement.Exec(1, "This is my voice one day learning Eng-breaking")
+	rows, _ := database.Query("SELECT id, description FROM user")
+	var id int32
+	var description string
+	for rows.Next() {
+		rows.Scan(&id, &description)
+		fmt.Println(strconv.Itoa(int(id)) + ": " + description)
 	}
-	log.Println("Success")
 }

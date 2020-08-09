@@ -1,18 +1,23 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net"
 
+	_ "github.com/mattn/go-sqlite3"
 	"google.golang.org/protobuf/proto"
 )
 
 var queue chan bool
 
+var db *sql.DB
+
 func main() {
-	queue = make(chan bool, 1000000)
-	createFile()
+	db, _ = sql.Open("sqlite3", "./database.db")
+	statement, _ := db.Prepare("CREATE TABLE IF NOT EXISTS user (id INTEGER, description TEXT)")
+	statement.Exec()
 	addr, err := net.ResolveUDPAddr("udp4", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
@@ -38,14 +43,20 @@ func handleConn(c *net.UDPConn) {
 }
 
 func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
-	queue <- true
 	var receive Packet
 	if err := proto.Unmarshal(data, &receive); err != nil {
 		log.Println(err)
 		<-queue
 		return
 	}
+	// Switch CMD
+	switch receive.Cmd {
+	case 1:
+	case 2:
+	case 3:
+	default:
+	}
+	//
 	c.WriteToUDP([]byte(addr.String()+" 200 OK"), addr)
 	fmt.Println(addr.String(), receive.Cmd)
-	<-queue
 }
