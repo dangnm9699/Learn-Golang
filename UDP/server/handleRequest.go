@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"net"
 
 	"google.golang.org/protobuf/proto"
@@ -12,7 +13,6 @@ func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
 	defer func() {
 		data, _ := proto.Marshal(res)
 		c.WriteToUDP(data, addr)
-		<-queue
 	}()
 	if err := proto.Unmarshal(data, req); err != nil {
 		*res = Response{
@@ -34,7 +34,8 @@ func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
 	switch req.Cmd {
 	case 1:
 		// CREATE
-		create(req, res)
+		stm, _ := db.Prepare("INSERT INTO user (msisdn, imsi, name, id, dob) VALUES (?, ?, ?, ?, ?)")
+		create(req, res, stm)
 	case 2:
 		// UPDATE
 		update(req, res)
@@ -46,9 +47,9 @@ func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
 	}
 }
 
-func create(req *Request, res *Response) {
-	stm, _ := db.Prepare("INSERT INTO user (msisdn, imsi, name, id, dob) VALUES (?, ?, ?, ?, ?)")
-	_, err := stm.Exec(req.Data.MSISDN, req.Data.IMSI, req.Data.Name, req.Data.ID, req.Data.DOB)
+func create(req *Request, res *Response, stm *sql.Stmt) {
+	tx, _ := db.Begin()
+	_, err := tx.Stmt(stm).Exec(req.Data.MSISDN, req.Data.IMSI, req.Data.Name, req.Data.ID, req.Data.DOB)
 	if err != nil {
 		*res = Response{
 			Cmd:     req.Cmd,
@@ -61,6 +62,7 @@ func create(req *Request, res *Response) {
 		Rescode: 201,
 		Reason:  "Created: OK",
 	}
+	tx.Commit()
 }
 
 func update(req *Request, res *Response) {
@@ -93,8 +95,8 @@ func update(req *Request, res *Response) {
 	for rows.Next() {
 		rows.Scan(&MSISDN, &IMSI, &Name, &ID, &DOB)
 	}
-	stm, _ := tx.Prepare("UPDATE user SET msisdn = ?, imsi = ?, name = ?, id = ?, dob = ? WHERE msisdn = ?")
-	_, err = tx.Stmt(stm).Exec(MSISDN, IMSI, stringToModify(req.Data.Name, Name), stringToModify(req.Data.ID, ID), stringToModify(req.Data.DOB, DOB))
+	stm, _ := tx.Prepare("UPDATE user SET imsi = ?, name = ?, id = ?, dob = ? WHERE msisdn = ?")
+	_, err = stm.Exec(IMSI, stringToModify(req.Data.Name, Name), stringToModify(req.Data.ID, ID), stringToModify(req.Data.DOB, DOB))
 	if err != nil {
 		*res = Response{
 			Cmd:     req.Cmd,
@@ -113,14 +115,16 @@ func update(req *Request, res *Response) {
 }
 
 func delete(req *Request, res *Response) {
-	stm, _ := db.Prepare("DELETE FROM user WHERE msisdn = ? AND imsi = ?")
+	tx, _ := db.Begin()
+	stm, _ := tx.Prepare("DELETE FROM user WHERE msisdn = ? AND imsi = ?")
 	result, err := stm.Exec(req.Data.MSISDN, req.Data.IMSI)
 	if err != nil {
 		*res = Response{
 			Cmd:     req.Cmd,
 			Rescode: 500,
-			Reason:  "Intertal Server Error",
+			Reason:  "Internal Server Error",
 		}
+		tx.Rollback()
 		return
 	}
 	if nrows, _ := result.RowsAffected(); nrows == 0 {
@@ -129,6 +133,7 @@ func delete(req *Request, res *Response) {
 			Rescode: 400,
 			Reason:  "Not Found",
 		}
+		tx.Rollback()
 		return
 	}
 	*res = Response{
@@ -136,4 +141,5 @@ func delete(req *Request, res *Response) {
 		Rescode: 204,
 		Reason:  "No Content: OK",
 	}
+	tx.Commit()
 }

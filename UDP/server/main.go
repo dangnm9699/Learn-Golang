@@ -10,18 +10,22 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var queue chan bool
+type el struct {
+	data []byte
+	addr *net.UDPAddr
+}
+
 var db *sql.DB
 var count int
 
 func main() {
 	runtime.GOMAXPROCS(1)
-	fmt.Println("Initializing...")
-	queue = make(chan bool, 50000)
+	queue := make(chan el, 5000)
 	db, _ = sql.Open("sqlite3", "./database.db")
 	statement, _ := db.Prepare("CREATE TABLE IF NOT EXISTS user (msisdn TEXT PRIMARY KEY NOT NULL, imsi TEXT NOT NULL, name TEXT NOT NULL, id TEXT NOT NULL, dob TEXT NOT NULL)")
 	statement.Exec()
-	fmt.Println("Done!")
+	db.Exec("PRAGMA synchronous = OFF")
+	fmt.Println("Initialized")
 	addr, err := net.ResolveUDPAddr("udp4", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
@@ -30,21 +34,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	go func() {
+		for {
+			buf := make([]byte, 32*1024)
+			nbytes, addr, err := conn.ReadFromUDP(buf)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			queue <- el{buf[:nbytes], addr}
+		}
+	}()
 	for {
 		count++
-		handleConn(conn)
-		fmt.Printf("\r%10d", count)
+		info := <-queue
+		execute(conn, info.addr, info.data)
+		fmt.Printf("\r%d", count)
 	}
-}
-
-func handleConn(c *net.UDPConn) {
-	buf := make([]byte, 32*1024)
-	nbytes, addr, err := c.ReadFromUDP(buf)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	// Goroutine here to execute
-	queue <- true
-	go execute(c, addr, buf[:nbytes])
 }

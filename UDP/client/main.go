@@ -8,13 +8,18 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	sync "sync"
 	"time"
 
 	"google.golang.org/protobuf/proto"
 )
 
+var maxsize int = 2000
+
 func main() {
 	runtime.GOMAXPROCS(1)
+	w := sync.WaitGroup{}
+	w.Add(2)
 	rAddr, err := net.ResolveUDPAddr("udp4", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
@@ -23,16 +28,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	start := time.Now()
 	go func() {
-		for {
+		for i := 0; i < maxsize; i++ {
 			sendData(conn)
-			time.Sleep(time.Nanosecond)
 		}
+		w.Done()
 	}()
-	for i := 1; true; i++ {
-		readResp(conn)
-		fmt.Println(i)
-	}
+	go func() {
+		for i := 0; i < maxsize; i++ {
+			readResp(conn)
+		}
+		w.Done()
+	}()
+	w.Wait()
+	fmt.Println(time.Since(start))
 }
 
 func randString() string {
@@ -43,7 +53,7 @@ func randString() string {
 
 func sendData(c *net.UDPConn) {
 	send := Request{
-		Cmd: rand.Int31n(3) + 1,
+		Cmd: 1,
 		Data: &User{
 			MSISDN: "84" + randString(),
 			IMSI:   "45204",
