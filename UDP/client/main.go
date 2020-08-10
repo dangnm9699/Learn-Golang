@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"os"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -30,11 +29,14 @@ func main() {
 	}
 }
 func sendData(c *net.UDPConn) {
-	send := Packet{
+	send := Request{
 		Cmd: rand.Int31n(3) + 1,
-		Info: &User{
-			Id:    os.Args[1],
-			Score: rand.Int31n(10),
+		Data: &User{
+			MSISDN: "",
+			IMSI:   "",
+			Name:   "",
+			ID:     "",
+			DOB:    "",
 		},
 	}
 	data, err := proto.Marshal(&send)
