@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var maxsize int = 2000
+var maxsize int = 4000
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func main() {
@@ -40,11 +40,11 @@ func main() {
 	go func() {
 		for i := 0; i < maxsize; i++ {
 			readResp(conn)
+			fmt.Printf("\r%v", time.Since(start))
 		}
 		w.Done()
 	}()
 	w.Wait()
-	fmt.Println(time.Since(start))
 }
 
 func randString() string {

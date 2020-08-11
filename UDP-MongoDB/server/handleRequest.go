@@ -13,6 +13,7 @@ func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
 	defer func() {
 		data, _ := proto.Marshal(res)
 		c.WriteToUDP(data, addr)
+		<-pool
 	}()
 	if err := proto.Unmarshal(data, req); err != nil {
 		*res = Response{
@@ -43,6 +44,11 @@ func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
 		delete(req, res)
 	default:
 		// METHOD NOT ALLOWED
+		*res = Response{
+			Cmd:     req.Cmd,
+			Rescode: 405,
+			Reason:  "Method Not Allowed",
+		}
 	}
 }
 
