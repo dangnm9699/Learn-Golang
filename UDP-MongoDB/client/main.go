@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"runtime"
 	"strconv"
 	"strings"
 	sync "sync"
@@ -14,13 +13,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var maxsize int = 4000
+var maxsize int = 2000
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func main() {
-	runtime.GOMAXPROCS(1)
 	w := sync.WaitGroup{}
-	w.Add(2)
+	w.Add(1)
 	rAddr, err := net.ResolveUDPAddr("udp4", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
@@ -33,18 +31,12 @@ func main() {
 	go func() {
 		for i := 0; i < maxsize; i++ {
 			sendData(conn)
-			time.Sleep(time.Nanosecond)
-		}
-		w.Done()
-	}()
-	go func() {
-		for i := 0; i < maxsize; i++ {
 			readResp(conn)
-			fmt.Printf("\r%v", time.Since(start))
 		}
 		w.Done()
 	}()
 	w.Wait()
+	fmt.Printf("\r%v", time.Since(start))
 }
 
 func randString() string {
@@ -70,7 +62,6 @@ func sendData(c *net.UDPConn) {
 		log.Fatal(err)
 	}
 	c.Write(data)
-	// time.Sleep(time.Nanosecond)
 }
 
 func readResp(c *net.UDPConn) {
@@ -85,5 +76,5 @@ func readResp(c *net.UDPConn) {
 		log.Println(err)
 		return
 	}
-	// fmt.Println(res.Cmd, res.Rescode, res.Reason)
+	// fmt.Print(res.Cmd, res.Rescode, res.Reason, "\n")
 }

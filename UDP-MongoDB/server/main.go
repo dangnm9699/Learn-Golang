@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"runtime"
 	"sync/atomic"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,13 +17,9 @@ type el struct {
 }
 
 var collection *mongo.Collection
-var pool chan bool
 var count int64
 
 func main() {
-	runtime.GOMAXPROCS(1)
-	queue := make(chan el, 5000)
-	pool = make(chan bool, 10)
 	// Connect DB
 	clientsOpt := options.Client().ApplyURI("mongodb://localhost:27017")
 	client, err := mongo.Connect(context.TODO(), clientsOpt)
@@ -52,21 +47,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go func() {
-		for {
-			buf := make([]byte, 32*1024)
-			nbytes, addr, err := conn.ReadFromUDP(buf)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			queue <- el{buf[:nbytes], addr}
-		}
-	}()
 	for {
-		info := <-queue
-		pool <- true
-		go execute(conn, info.addr, info.data)
+		buf := make([]byte, 32*1024)
+		nbytes, addr, err := conn.ReadFromUDP(buf)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		go execute(conn, addr, buf[:nbytes])
 		fmt.Printf("\r%d", atomic.AddInt64(&count, 1))
 	}
 }

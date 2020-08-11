@@ -13,7 +13,7 @@ func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
 	defer func() {
 		data, _ := proto.Marshal(res)
 		c.WriteToUDP(data, addr)
-		<-pool
+		// <-pool
 	}()
 	if err := proto.Unmarshal(data, req); err != nil {
 		*res = Response{
