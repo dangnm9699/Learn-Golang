@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var maxsize int = 2000
+var maxsize int = 20
 var name []string = []string{
 	"dangnm", "ducnt", "trungnx", "hieunm", "dongnt", "trunglq",
 	"thuannt", "quanvd", "luongnv", "thanhntt", "dungbv", "sonna",
@@ -19,45 +19,40 @@ var name []string = []string{
 
 func main() {
 	w := sync.WaitGroup{}
-	w.Add(1)
-	rAddr, err := net.ResolveUDPAddr("udp", "localhost:8000")
-	if err != nil {
-		log.Fatal(err)
-	}
-	conn, err := net.DialUDP("udp", nil, rAddr)
+	w.Add(2000)
+	rAddr, err := net.ResolveUDPAddr("udp4", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
 	}
 	start := time.Now()
-	go func() {
-		for {
-			sendRequest(conn)
-			readResponse(conn)
-		}
-		// w.Done()
-	}()
+	for i := 0; i < 2000; i++ {
+		go func() {
+			conn, err := net.DialUDP("udp4", nil, rAddr)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for i := 0; i < maxsize; i++ {
+				sendRequest(conn)
+				readResponse(conn)
+			}
+			w.Done()
+		}()
+		time.Sleep(time.Nanosecond)
+	}
 	w.Wait()
 	fmt.Println(time.Since(start))
 }
 
 func sendRequest(c *net.UDPConn) {
 	send := Request{
-		Cmd: randCmd(),
+		Cmd: 1,
 		Data: &User{
 			MSISDN: randMSISDN(),
 			IMSI:   randIMSI(),
-			Name:   name[r.Int31n(24)],
+			Name:   "dangnm",
 			ID:     randID(),
 			DOB:    randDOB(),
 		},
-		// Cmd: 3,
-		// Data: &User{
-		// 	MSISDN: "84653027235",
-		// 	IMSI:   "452043666072889",
-		// 	Name:   "dangnm",
-		// 	ID:     "125832414",
-		// 	DOB:    "09061999",
-		// },
 	}
 	data, err := proto.Marshal(&send)
 	if err != nil {
@@ -78,5 +73,5 @@ func readResponse(c *net.UDPConn) {
 		log.Println(err)
 		return
 	}
-	// fmt.Println(res.Cmd, res.Rescode, res.Reason)
+	fmt.Println(c.LocalAddr().String(), res.Cmd, res.Rescode, res.Reason)
 }

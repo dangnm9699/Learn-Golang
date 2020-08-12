@@ -39,22 +39,29 @@ func main() {
 		fmt.Println("Disconnect to MongoDB")
 	}()
 	//
-	addr, err := net.ResolveUDPAddr("udp", "localhost:8000")
+	queue := make(chan el, 2000)
+	addr, err := net.ResolveUDPAddr("udp4", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
 	}
-	conn, err := net.ListenUDP("udp", addr)
+	conn, err := net.ListenUDP("udp4", addr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for {
-		buf := make([]byte, 32*1024)
-		nbytes, addr, err := conn.ReadFromUDP(buf)
-		if err != nil {
-			log.Println(err)
-			continue
+	go func() {
+		for {
+			buf := make([]byte, 32*1024)
+			nbytes, addr, err := conn.ReadFromUDP(buf)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			queue <- el{buf[:nbytes], addr}
 		}
-		go execute(conn, addr, buf[:nbytes])
+	}()
+	for {
+		info := <-queue
+		execute(conn, info.addr, info.data)
 		fmt.Printf("\r%d", atomic.AddInt64(&count, 1))
 	}
 }

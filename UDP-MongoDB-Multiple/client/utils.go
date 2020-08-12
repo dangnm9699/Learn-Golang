@@ -10,10 +10,6 @@ import (
 
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-func randCmd() int32 {
-	return r.Int31n(3) + 1
-}
-
 func randMSISDN() string {
 	a := strconv.Itoa(int(r.Int31n(1000000000)))
 	return "84" + strings.Repeat("0", 9-len(a)) + a

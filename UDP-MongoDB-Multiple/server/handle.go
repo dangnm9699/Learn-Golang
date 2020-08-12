@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,6 +15,7 @@ func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
 	defer func() {
 		data, _ := proto.Marshal(res)
 		c.WriteToUDP(data, addr)
+		// <-pool
 	}()
 	if err := proto.Unmarshal(data, req); err != nil {
 		*res = Response{
@@ -55,10 +57,11 @@ func execute(c *net.UDPConn, addr *net.UDPAddr, data []byte) {
 func create(req *Request, res *Response) {
 	_, err := collection.InsertOne(context.TODO(), req.Data)
 	if err != nil {
+		fmt.Println("Insert error")
 		*res = Response{
 			Cmd:     req.Cmd,
-			Rescode: 409,
-			Reason:  "Conflit: Duplicated record",
+			Rescode: 400,
+			Reason:  "Bad Request: Duplicate record",
 		}
 		return
 	}
@@ -71,7 +74,7 @@ func create(req *Request, res *Response) {
 }
 
 func update(req *Request, res *Response) {
-	filter := bson.M{"msisdn": bson.M{"$eq": req.Data.MSISDN}, "imsi": bson.M{"$eq": req.Data.IMSI}}
+	filter := bson.M{"msisdn": bson.M{"$eq": req.Data.MSISDN}}
 	result := User{}
 	if err := collection.FindOne(context.TODO(), filter).Decode(&result); err != nil {
 		*res = Response{
@@ -104,28 +107,5 @@ func update(req *Request, res *Response) {
 }
 
 func delete(req *Request, res *Response) {
-	filter := bson.M{"msisdn": bson.M{"$eq": req.Data.MSISDN}, "imsi": bson.M{"$eq": req.Data.IMSI}}
-	result, err := collection.DeleteOne(context.TODO(), filter)
-	if err != nil {
-		*res = Response{
-			Cmd:     req.Cmd,
-			Rescode: 500,
-			Reason:  "Internal Server Error",
-		}
-		return
-	}
-	if result.DeletedCount == 0 {
-		*res = Response{
-			Cmd:     req.Cmd,
-			Rescode: 404,
-			Reason:  "Not Found",
-		}
-		return
-	}
-	*res = Response{
-		Cmd:     req.Cmd,
-		Rescode: 204,
-		Reason:  "No Content: OK",
-	}
-	return
+
 }
