@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"runtime"
+	"sync/atomic"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -16,11 +16,9 @@ type el struct {
 }
 
 var db *sql.DB
-var count int
+var count int64
 
 func main() {
-	runtime.GOMAXPROCS(1)
-	queue := make(chan el, 5000)
 	db, _ = sql.Open("sqlite3", "./database.db")
 	statement, _ := db.Prepare("CREATE TABLE IF NOT EXISTS user (msisdn TEXT PRIMARY KEY NOT NULL, imsi TEXT NOT NULL, name TEXT NOT NULL, id TEXT NOT NULL, dob TEXT NOT NULL)")
 	statement.Exec()
@@ -34,21 +32,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go func() {
-		for {
-			buf := make([]byte, 32*1024)
-			nbytes, addr, err := conn.ReadFromUDP(buf)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			queue <- el{buf[:nbytes], addr}
-		}
-	}()
 	for {
-		count++
-		info := <-queue
-		execute(conn, info.addr, info.data)
-		fmt.Printf("\r%d", count)
+		buf := make([]byte, 32*1024)
+		nbytes, addr, err := conn.ReadFromUDP(buf)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		go execute(conn, addr, buf[:nbytes])
+		fmt.Printf("\r%d", atomic.AddInt64(&count, 1))
 	}
 }

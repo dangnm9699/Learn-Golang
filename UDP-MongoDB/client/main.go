@@ -3,10 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"net"
-	"strconv"
-	"strings"
 	sync "sync"
 	"time"
 
@@ -14,7 +11,11 @@ import (
 )
 
 var maxsize int = 2000
-var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+var name []string = []string{
+	"dangnm", "ducnt", "trungnx", "hieunm", "dongnt", "trunglq",
+	"thuannt", "quanvd", "luongnv", "thanhntt", "dungbv", "sonna",
+	"tuannm", "ducdm", "huyvq", "trangntt", "diunt", "khanhdt",
+	"thanhndt", "haitt", "duynv", "vinhnt", "linhnt", "thudt"}
 
 func main() {
 	w := sync.WaitGroup{}
@@ -30,31 +31,24 @@ func main() {
 	start := time.Now()
 	go func() {
 		for i := 0; i < maxsize; i++ {
-			sendData(conn)
-			readResp(conn)
+			sendRequest(conn)
+			readResponse(conn)
 		}
 		w.Done()
 	}()
 	w.Wait()
-	fmt.Printf("\r%v", time.Since(start))
+	fmt.Println(time.Since(start))
 }
 
-func randString() string {
-
-	a := strconv.Itoa(int(r.Int31n(1000000000)))
-	a = strings.Repeat("0", 9-len(a)) + a
-	return a
-}
-
-func sendData(c *net.UDPConn) {
+func sendRequest(c *net.UDPConn) {
 	send := Request{
 		Cmd: 1,
 		Data: &User{
-			MSISDN: "84" + randString(),
-			IMSI:   "45204",
-			Name:   "dangnm",
-			ID:     "125832414",
-			DOB:    "090699",
+			MSISDN: randMSISDN(),
+			IMSI:   randIMSI(),
+			Name:   name[r.Int31n(24)],
+			ID:     randID(),
+			DOB:    randDOB(),
 		},
 	}
 	data, err := proto.Marshal(&send)
@@ -64,7 +58,7 @@ func sendData(c *net.UDPConn) {
 	c.Write(data)
 }
 
-func readResp(c *net.UDPConn) {
+func readResponse(c *net.UDPConn) {
 	buf := make([]byte, 2048)
 	nbytes, _, err := c.ReadFromUDP(buf)
 	if err != nil {
@@ -76,5 +70,5 @@ func readResp(c *net.UDPConn) {
 		log.Println(err)
 		return
 	}
-	// fmt.Print(res.Cmd, res.Rescode, res.Reason, "\n")
+	// fmt.Println(res.Cmd, res.Rescode, res.Reason)
 }

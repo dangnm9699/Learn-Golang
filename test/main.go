@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -11,11 +13,9 @@ type res struct {
 	reason  string
 }
 
+var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 func main() {
-	a := &res{1, 400, "Bad Request"}
-	start := time.Now()
-	for i := 0; i < 2000; i++ {
-		fmt.Println(a.cmd, a.rescode, a.reason)
-	}
-	fmt.Println(time.Since(start))
+	a := "999999999"
+	fmt.Println(strings.Repeat("0", 9-len(a)))
 }

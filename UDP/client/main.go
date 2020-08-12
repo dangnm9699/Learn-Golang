@@ -5,7 +5,6 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"runtime"
 	"strconv"
 	"strings"
 	sync "sync"
@@ -17,9 +16,8 @@ import (
 var maxsize int = 2000
 
 func main() {
-	runtime.GOMAXPROCS(1)
 	w := sync.WaitGroup{}
-	w.Add(2)
+	w.Add(1)
 	rAddr, err := net.ResolveUDPAddr("udp4", "localhost:8000")
 	if err != nil {
 		log.Fatal(err)
@@ -32,11 +30,6 @@ func main() {
 	go func() {
 		for i := 0; i < maxsize; i++ {
 			sendData(conn)
-		}
-		w.Done()
-	}()
-	go func() {
-		for i := 0; i < maxsize; i++ {
 			readResp(conn)
 		}
 		w.Done()
@@ -82,5 +75,5 @@ func readResp(c *net.UDPConn) {
 		log.Println(err)
 		return
 	}
-	fmt.Println(res.Cmd, res.Rescode, res.Reason)
+	// fmt.Println(res.Cmd, res.Rescode, res.Reason)
 }
